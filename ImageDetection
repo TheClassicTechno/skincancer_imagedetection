@@ -1,0 +1,156 @@
+from google.colab.output import eval_js
+
+import time
+start_time = time.time()
+
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tqdm.notebook import tqdm
+
+import keras
+from keras import backend as K
+from tensorflow.keras.layers import *
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D
+from keras.layers import Activation, MaxPooling2D, Dropout, Flatten, Reshape
+from keras.wrappers.scikit_learn import KerasClassifier
+
+import matplotlib.pyplot as plt
+import matplotlib
+import seaborn as sns
+import os
+import random
+from PIL import Image
+import gdown
+
+import argparse
+import numpy as np
+from keras.layers import Conv2D, Input, BatchNormalization, LeakyReLU, ZeroPadding2D, UpSampling2D
+from keras.layers.merge import add, concatenate
+from keras.models import Model
+import struct
+from google.colab.patches import cv2_imshow
+from copy import deepcopy
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import tree
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import roc_auc_score
+from sklearn.base import BaseEstimator
+
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+
+from sklearn.metrics import make_scorer
+from sklearn.metrics import accuracy_score
+from keras.applications.mobilenet import MobileNet
+
+from hypopt import GridSearch
+
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering
+
+import cv2
+
+
+import tensorflowjs as tfjs
+
+from google.colab import files
+
+import requests, io, zipfile
+import os
+
+import os.path
+from os import path
+
+#import your own data files for training
+
+print("Done!")
+
+X = np.load("X.npy")
+X_g = np.load("X_g.npy")
+y = np.load("y.npy")
+
+# define your CNN model
+def CNNClassifier(epochs=6, batch_size=10, layers=5, dropout=0.5, activation='relu'):
+  def set_params():
+    i = 1  
+  def create_model():
+    model = Sequential()
+    model.add(Reshape((IMG_WIDTH, IMG_HEIGHT, 3)))
+    
+    for i in range(layers):
+      model.add(Conv2D(64, (3, 3), padding='same'))
+      model.add(Activation(activation))
+    
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation(activation))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(dropout / 2.0))
+
+    model.add(Conv2D(128, (3, 3), padding='same'))
+    model.add(Activation(activation))
+    model.add(Conv2D(128, (3, 3)))
+    model.add(Activation(activation))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(dropout / 2.0))
+
+    model.add(Flatten())
+    model.add(Dense(512))
+    model.add(Activation(activation))
+    model.add(Dropout(dropout))
+    model.add(Dense(7))
+    model.add(Activation('softmax'))
+
+    # initiate RMSprop optimizer
+    opt = tf.keras.optimizers.RMSprop(lr=0.0001, decay=1e-6)
+
+    # Let's train the model using RMSprop
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=opt,
+                  metrics=[tf.keras.metrics.AUC()])
+    return model
+  return KerasClassifier(build_fn=create_model, epochs=epochs, batch_size=batch_size, verbose=1)
+  
+# Here you need to train your data with the above CNN model
+
+# after training your CNN model, here is to set up Anvil Framework
+
+!pip install anvil-uplink
+import anvil.server
+# replace your own key below
+anvil.server.connect("XXXXXXXXXXXXXX")
+
+import anvil.media
+print (X_test.shape)
+#classes = ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc']
+classes = [' Actinic Keratoses', ' Basal Cell Carcinoma', ' Benign Keratoses', ' Dermatofibroma', 'melanoma', ' Melanocytic Nevus', ' Vascular lesions']
+
+@anvil.server.callable
+def predict_image(image_file):
+  with anvil.media.TempFile(image_file) as userfilename:
+     img = tf.keras.utils.load_img(userfilename)
+     img = img.resize((75, 100), resample=Image.BICUBIC)
+     arr = tf.keras.utils.img_to_array(img)
+     arr = np.expand_dims(arr, axis=0)
+     arr /= 255.0
+ 
+     score=cnn.predict(arr);
+     
+     return classes[score[0]]
+
+anvil.server.wait_forever()
