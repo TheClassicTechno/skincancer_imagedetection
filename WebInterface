@@ -1,0 +1,68 @@
+from ._anvil_designer import Form1Template
+from anvil import *
+import anvil.server
+
+class Form1(Form1Template):
+
+  def __init__(self, **properties):
+    # Set Form properties and Data Bindings.
+    self.init_components(**properties)
+
+    # Any code you write here will run when the form opens.
+
+  def text_box_1_pressed_enter(self, **event_args):
+    """This method is called when the user presses Enter in this text box"""
+    pass
+
+  def classify_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    sound_category = anvil.server.call('predict_sound2', 
+                                self.sound_file.text)
+    # If a category is returned set our species 
+    if sound_category:
+      self.result.visible = True
+      self.result.text = "The species is " + sound_category.capitalize()
+    pass
+
+  def button_upload_click1(self, **event_args):
+    self.result.visible = True
+    self.result.text = "The Result is melanoma"
+    
+    pass
+  
+  def button_upload_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    
+    self.file_loader_1.enabled = False
+    #self.progress_lbl.text = "Uploading..."
+
+    n_files = len(self.file_loader_1.files)
+    n = 0
+    self.user_image.visible = True
+       
+    for file in self.file_loader_1.files:
+      #anvil.server.call('upload_file', file)
+       self.user_image.source=file
+       sound_category = anvil.server.call('predict_image', 
+                                file)
+    # If a category is returned set our species 
+       classes = ['actinic keratosis', 'basal cell carcionoma', 'benign keratosis', 'dermatofibroma', 'melanoma', 'melanocytic nevus', 'vascular lesions']
+       if sound_category:
+          self.result.visible = True
+          self.result.text = "The Result is "+ str(sound_category)
+          #self.result.text = "The Result is "+ classes[sound_category[0]]
+       n += 1
+      #self.progress_lbl.text = f"Uploaded {n} of {n_files} files"
+      
+    #self.progress_lbl.text = f"Uploaded {n_files} files"
+      
+    self.file_loader_1.clear()
+    self.file_loader_1.enabled = True
+    
+    
+    pass
+
+
+
+
+
